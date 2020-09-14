@@ -11,8 +11,8 @@ import re
 import sys
 
 try:
-    import lxml.builder
-    import lxml.etree
+    from lxml import builder
+    from lxml import etree
 except ImportError:
     print('Please install lxml:\n\n    pip install lxml\n')
     sys.exit(1)
@@ -74,10 +74,12 @@ def main():
         f.writelines('\n'.join(class_names))
     print('Saved class_names:', out_class_names_file)
 
-    label_file_list = glob.glob(osp.join(args.input_dir, '*.json'))
-    for i in progressbar.progressbar(range(len(label_file_list))):
-        label_file = label_file_list[i]
-        # print('Generating dataset from:', label_file)
+    # label_file_list = glob.glob(osp.join(args.input_dir, '*.json'))
+    label_file_list = os.listdir(args.input_dir)
+    # for i in progressbar.progressbar(range(len(label_file_list))):
+    for i in range(len(label_file_list)):
+        label_file = osp.join(args.input_dir, label_file_list[i])
+        print('Generating dataset from:', label_file)
         with open(label_file, 'r', encoding='UTF-8') as f:
             data = json.load(f)
 
@@ -110,7 +112,7 @@ def main():
         PIL.Image.fromarray(img).save(out_img_file)
 
         # generate voc format annotation file
-        maker = lxml.builder.ElementMaker()
+        maker = builder.ElementMaker()
         xml = maker.annotation(
             # folder name
             maker.folder(""),
@@ -140,12 +142,13 @@ def main():
                 class_name = fst2snd_dict[class_name]
 
             class_id = class_names.index(class_name)  # convert to class id
+            print("222", shape)
 
             # box info from annotated points
-            xmin = shape['points'][0][0]
-            ymin = shape['points'][0][1]
-            xmax = shape['points'][2][0]
-            ymax = shape['points'][2][1]
+            xmin = int(shape['points'][0][0])
+            ymin = int(shape['points'][0][1])
+            xmax = int(shape['points'][1][0])
+            ymax = int(shape['points'][1][1])
 
             # swap if min is larger than max.
             xmin, xmax = sorted([xmin, xmax])
@@ -200,7 +203,7 @@ def main():
 
         # save voc annotation to xml file
         with open(out_xml_file, 'wb') as f:
-            f.write(lxml.etree.tostring(xml, pretty_print=True))
+            f.write(etree.tostring(xml, pretty_print=True))
 
 
 if __name__ == '__main__':
